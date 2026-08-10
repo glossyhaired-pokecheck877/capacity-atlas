@@ -22,7 +22,7 @@ test("loginSpec isolates Codex and Grok while Claude uses its official ambient s
   const grok = loginSpec("grok", "/profiles/three");
   assert.deepEqual(grok.args, ["login", "--oauth"]);
   assert.deepEqual(grok.env, { GROK_HOME: "/profiles/three" });
-  assert.equal(grok.credentialPath, "/profiles/three/auth.json");
+  assert.equal(grok.credentialPath, join("/profiles/three", "auth.json"));
   assert.equal(grok.isolated, true);
 });
 
