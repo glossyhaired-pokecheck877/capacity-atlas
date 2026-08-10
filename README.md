@@ -1,5 +1,7 @@
 # Capacity Atlas
 
+**日本語** | [English](README.en.md)
+
 **すべてのAI容量を、ひとつの画面に。**
 
 Capacity Atlasは、GPT / OpenAI Codex、Claude、Grokの残容量、リセット日時、認証状態を一画面で確認するローカルファーストのオープンソース管理ツールです。
