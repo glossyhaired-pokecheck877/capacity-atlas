@@ -57,6 +57,7 @@ test("Claude uses the official Keychain credential when the legacy file token is
 test("Claude macOS Keychain lookup is scoped to the current OS user", async () => {
   let invocation;
   const result = await readClaudeKeychain({
+    platform: "darwin",
     username: "desktop-user",
     execFile: async (command, args) => {
       invocation = { command, args };
