@@ -1,0 +1,32 @@
+{
+  "name": "capacity-atlas",
+  "version": "0.7.2",
+  "description": "Local-first dashboard for monitoring AI account capacity across OpenAI Codex, Claude, and Grok",
+  "license": "MIT",
+  "private": false,
+  "type": "module",
+  "bin": "connector-entry.js",
+  "pkg": {
+    "assets": [
+      "public/**/*"
+    ],
+    "outputPath": "release"
+  },
+  "scripts": {
+    "test": "node --test",
+    "build": "node scripts/build-static.mjs",
+    "prepare:codex": "node scripts/fetch-codex.mjs",
+    "build:connector": "pkg . --targets node24-macos-arm64,node24-win-x64 --out-path release --compress GZip --no-bytecode --public",
+    "package:connector": "npm run prepare:codex && node scripts/package-release.mjs",
+    "build:release": "npm run build:connector && npm run package:connector",
+    "start": "node server.js",
+    "check": "node --check server.js && node --check connector-entry.js && node --check public/client.js && node --check public/connector-client.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.21.0",
+    "tar": "^7.5.22"
+  }
+}

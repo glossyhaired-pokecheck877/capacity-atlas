@@ -1,0 +1,17 @@
+node_modules/
+dist/
+release/
+.vercel/
+.quota-deck/
+.capacity-atlas/
+.env
+.env.*
+!.env.example
+.DS_Store
+npm-debug.log*
+coverage/
+qa/
+qa-*.png
+vendor/codex/macos-arm64/codex
+vendor/codex/windows-x64/codex.exe
+vendor/codex/**/*.source.json
