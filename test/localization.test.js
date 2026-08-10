@@ -15,7 +15,7 @@ test("primary navigation and controls are Japanese", () => {
 });
 
 test("dynamic capacity and status labels are Japanese", () => {
-  for (const phrase of ["取得済み", "再接続が必要", "取得できません", "残り", "更新済み", "Connector接続済み", "Connector未接続", "このPCで開く", "コードをコピーしてOpenAIを開く", "この画面に戻る", "利用枠の取得が混み合っています"]) {
+  for (const phrase of ["取得済み", "再接続が必要", "取得できません", "残り", "更新済み", "Connector接続済み", "Connector未接続", "接続を再確認", "コードをコピーしてOpenAIを開く", "この画面に戻る", "利用枠の取得が混み合っています"]) {
     assert.match(client, new RegExp(phrase));
   }
   for (const phrase of ["Authentication required", "Capacity unavailable", "Not available", "Local collector live"]) {

@@ -150,6 +150,7 @@ function renderSetupGuide(provider) {
 
 async function checkConnector() {
   const banner = $("#connectorBanner");
+  const installActions = $("#connectorInstallActions");
   try {
     const health = await connector.health();
     if (!health.ready) throw new Error("not ready");
@@ -170,16 +171,17 @@ async function checkConnector() {
     state.connectorReady = false;
     state.connectorOutdated = false;
     banner.className = "connector-banner missing";
-    $("#connectorTitle").textContent = "ConnectorをこのPCで開いてください";
-    $("#connectorDetail").textContent = "下の「このPCで開く」を押すと、ブラウザ設定なしで実アカウントを表示できます";
+    $("#connectorTitle").textContent = "まずConnectorをダウンロードして起動してください";
+    $("#connectorDetail").textContent = "OSに合う版を選び、解凍してConnectorを起動します";
   }
+  installActions.hidden = state.connectorReady;
   const button = $("#connectAccountButton");
   button.disabled = state.connectorOutdated;
   button.textContent = state.connectorOutdated
     ? "Connectorを更新してください"
     : state.connectorReady
     ? (setupGuide(state.setupProvider)?.actionLabel || "接続する")
-    : "このPCで開く";
+    : "接続を再確認";
 }
 
 async function openSetupDialog(provider = "codex") {
@@ -240,8 +242,11 @@ function renderLoginResult(element, success, message) {
 
 async function startAccountLogin() {
   if (!state.connectorReady) {
-    window.location.assign(connector.url);
-    return;
+    await checkConnector();
+    if (!state.connectorReady) {
+      showToast("Connectorを起動してから接続を再確認してください");
+      return;
+    }
   }
   const button = $("#connectAccountButton");
   const output = $("#loginOutput");

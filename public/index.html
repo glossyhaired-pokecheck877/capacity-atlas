@@ -82,6 +82,11 @@
     <div class="dialog-head"><div><p class="eyebrow">アカウント設定</p><h2 id="setupDialogTitle">アカウントを追加</h2></div><button class="dialog-close" id="closeSetupDialog" type="button" aria-label="閉じる">×</button></div>
     <p class="dialog-copy">追加するAIサービスを選んで接続してください。パスワード・トークン・CookieはCapacity AtlasのWeb画面やVercelへ送信しません。</p>
     <div class="connector-banner" id="connectorBanner"><span></span><div><b id="connectorTitle">Connectorを確認中</b><small id="connectorDetail">このPCの安全な認証機能へ接続しています</small></div></div>
+    <div class="connector-install-actions" id="connectorInstallActions" hidden>
+      <a class="connector-download" href="https://github.com/meem0601/capacity-atlas/releases/latest/download/Capacity-Atlas-Connector-macOS-arm64.zip"><b>macOS版をダウンロード</b><small>Apple Silicon</small></a>
+      <a class="connector-download" href="https://github.com/meem0601/capacity-atlas/releases/latest/download/Capacity-Atlas-Connector-Windows-x64.zip"><b>Windows版をダウンロード</b><small>Windows x64</small></a>
+      <p>ダウンロード後に解凍してConnectorを起動し、「接続を再確認」を押してください。</p>
+    </div>
     <div class="provider-choices" id="providerChoices" role="tablist" aria-label="追加するサービス">
       <button class="provider-choice active" data-setup-provider="codex" type="button" role="tab"><img src="/assets/providers/openai.svg" alt="">GPT / Codex</button>
       <button class="provider-choice" data-setup-provider="claude" type="button" role="tab"><img src="/assets/providers/claude.svg" alt="">Claude</button>
