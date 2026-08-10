@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { loginSpec, resolveProviderCommand, sanitizeLoginOutput, AccountManager } from "../lib/account-manager.js";
 
 test("loginSpec isolates Codex and Grok while Claude uses its official ambient store", () => {
@@ -14,7 +16,7 @@ test("loginSpec isolates Codex and Grok while Claude uses its official ambient s
   const claude = loginSpec("claude", "/profiles/two");
   assert.deepEqual(claude.args, ["auth", "login", "--claudeai"]);
   assert.deepEqual(claude.env, {});
-  assert.match(claude.credentialPath, /\.claude\/.credentials\.json$/);
+  assert.match(claude.credentialPath, /\.claude[\\/]\.credentials\.json$/);
   assert.equal(claude.isolated, false);
 
   const grok = loginSpec("grok", "/profiles/three");
@@ -61,7 +63,7 @@ test("AccountManager prepares a managed provider helper before starting browser 
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(spawned[0].command, "/managed/helpers/grok");
   assert.deepEqual(spawned[0].args, ["login", "--oauth"]);
-  assert.match(spawned[0].options.env.GROK_HOME, /profiles\/grok\//);
+  assert.match(spawned[0].options.env.GROK_HOME, /profiles[\\/]grok[\\/]/);
 });
 
 test("Claude OAuth completion is verified with the official auth status instead of a credential file", async () => {
@@ -116,13 +118,16 @@ test("AccountManager labels managed profile homes without treating ambient CLI a
 test("AccountManager disconnect removes only selected managed profiles and rewrites the registry", async () => {
   const removed = [];
   let written;
+  const root = join(tmpdir(), "capacity-atlas-disconnect-test");
+  const removeHome = join(root, "profiles", "codex", "remove-me");
+  const keepHome = join(root, "profiles", "codex", "keep-me");
   const manager = new AccountManager({
-    root: "/tmp/capacity-atlas-disconnect-test",
+    root,
     readFile: async () => JSON.stringify({
       version: 1,
       accounts: [
-        { id: "remove-me", provider: "codex", home: "/tmp/capacity-atlas-disconnect-test/profiles/codex/remove-me" },
-        { id: "keep-me", provider: "codex", home: "/tmp/capacity-atlas-disconnect-test/profiles/codex/keep-me" }
+        { id: "remove-me", provider: "codex", home: removeHome },
+        { id: "keep-me", provider: "codex", home: keepHome }
       ]
     }),
     writeFile: async (_path, value) => { written = JSON.parse(value); },
@@ -132,7 +137,7 @@ test("AccountManager disconnect removes only selected managed profiles and rewri
 
   const result = await manager.disconnect(["remove-me"]);
   assert.deepEqual(result, { removed: 1 });
-  assert.deepEqual(removed, ["/tmp/capacity-atlas-disconnect-test/profiles/codex/remove-me"]);
+  assert.deepEqual(removed, [removeHome]);
   assert.deepEqual(written.accounts.map(account => account.id), ["keep-me"]);
 });
 

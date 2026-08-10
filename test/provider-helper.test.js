@@ -53,7 +53,7 @@ test("Claude helper is downloaded to Connector storage and checksum verified wit
 
   const path = await manager.ensure("claude");
   assert.equal((await readFile(path)).toString(), binary.toString());
-  assert.ok((await stat(path)).mode & 0o100);
+  if (process.platform !== "win32") assert.ok((await stat(path)).mode & 0o100);
   assert.equal(requests.length, 3);
 
   assert.equal(await manager.ensure("claude"), path);
