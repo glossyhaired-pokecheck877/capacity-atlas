@@ -47,7 +47,7 @@ test("a stalled provider request times out instead of blocking Connector status"
     })
   });
   assert.equal(account.status, "unavailable");
-  assert.match(account.message, /abort|timeout|timed out/i);
+  assert.match(account.message, /abort|timeout|timed out|タイムアウト/i);
 });
 
 test("an oversized provider response is rejected before reading its body", async () => {
@@ -64,6 +64,7 @@ test("an oversized provider response is rejected before reading its body", async
 });
 
 test("a provider response without a readable stream fails closed", async () => {
+  let cancelled = false;
   const account = await collectCodexAccount({
     home: "/profile",
     readJson: async () => ({ tokens: { access_token: "secret" } }),
@@ -71,12 +72,35 @@ test("a provider response without a readable stream fails closed", async () => {
       ok: true,
       status: 200,
       headers: { get: () => null },
+      body: { cancel: async () => { cancelled = true; } },
       arrayBuffer: async () => { throw new Error("must not buffer"); },
       text: async () => { throw new Error("must not buffer"); }
     })
   });
   assert.equal(account.status, "unavailable");
   assert.match(account.message, /安全なストリーム/);
+  assert.equal(cancelled, true);
+});
+
+test("a provider body that cannot create a reader fails closed without leaking its timeout", async () => {
+  let cancelled = false;
+  const account = await collectCodexAccount({
+    home: "/profile",
+    timeoutMs: 1_000,
+    readJson: async () => ({ tokens: { access_token: "secret" } }),
+    fetch: async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      body: {
+        getReader: () => { throw new Error("reader initialization failed"); },
+        cancel: async () => { cancelled = true; }
+      }
+    })
+  });
+  assert.equal(account.status, "unavailable");
+  assert.match(account.message, /reader initialization failed/);
+  assert.equal(cancelled, true);
 });
 
 test("a failed provider response stream is cancelled and released", async () => {

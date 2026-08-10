@@ -178,7 +178,7 @@ test("a stalled helper download times out instead of leaving login preparation h
     }),
     verifyBinary: async () => {}
   });
-  await assert.rejects(() => manager.ensure("claude"), /abort|timeout|timed out/i);
+  await assert.rejects(() => manager.ensure("claude"), /abort|timeout|timed out|タイムアウト/i);
 });
 
 test("non-OK helper responses and failed streams are cancelled", async () => {
@@ -217,10 +217,31 @@ test("non-OK helper responses and failed streams are cancelled", async () => {
   await assert.rejects(() => streamManager.ensure("claude"), /stream failed/);
   assert.equal(failedStreamCancelled, true);
   assert.equal(lockReleased, true);
+
+  let readerInitCancelled = false;
+  const readerInitManager = new ProviderHelperManager({
+    root,
+    platform: "darwin",
+    arch: "arm64",
+    timeoutMs: 1_000,
+    fetch: async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      body: {
+        getReader: () => { throw new Error("reader initialization failed"); },
+        cancel: async () => { readerInitCancelled = true; }
+      }
+    }),
+    verifyBinary: async () => {}
+  });
+  await assert.rejects(() => readerInitManager.ensure("claude"), /reader initialization failed/);
+  assert.equal(readerInitCancelled, true);
 });
 
 test("a helper response without a readable stream fails closed", async () => {
   const root = await mkdtemp(join(tmpdir(), "capacity-atlas-helper-no-stream-"));
+  let cancelled = false;
   const manager = new ProviderHelperManager({
     root,
     platform: "darwin",
@@ -229,12 +250,14 @@ test("a helper response without a readable stream fails closed", async () => {
       ok: true,
       status: 200,
       headers: { get: () => null },
+      body: { cancel: async () => { cancelled = true; } },
       arrayBuffer: async () => { throw new Error("must not buffer"); },
       text: async () => { throw new Error("must not buffer"); }
     }),
     verifyBinary: async () => {}
   });
   await assert.rejects(() => manager.ensure("claude"), /安全なストリーム/);
+  assert.equal(cancelled, true);
 });
 
 test("oversized helper metadata is rejected before downloading a binary", async () => {
