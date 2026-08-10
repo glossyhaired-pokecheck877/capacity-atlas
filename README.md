@@ -20,6 +20,27 @@ Node.jsや各社CLIの事前インストールは不要です。
 
 Connectorを起動し、ブラウザで「アカウントを追加」を押してOAuth認証するだけで利用できます。
 
+### macOS Apple Siliconでの初回起動
+
+1. ZIPを展開し、`Capacity Atlas Connector.app`を「アプリケーション」フォルダへ移動します。
+2. 現在の配布版はApple公証前です。通常のダブルクリックで警告が出た場合は、アプリを**controlクリック→「開く」→「開く」**の順に選びます。
+3. ブラウザが自動で開かない場合は、<http://127.0.0.1:4174> を開きます。
+
+対応機種はApple Silicon搭載Macです。警告を許可する前に、GitHub ReleaseのSHA-256とダウンロードしたZIPが一致することを確認してください。
+
+### Windows x64での初回起動
+
+1. ZIPを展開し、フォルダ内のファイルを分離せずそのまま保持します。
+2. `Start Capacity Atlas.cmd`をダブルクリックします。
+3. 現在の配布版はコード署名前です。SmartScreenが表示された場合は、GitHub Releaseの配布元・ファイル名・SHA-256を確認した場合だけ**「詳細情報」→「実行」**を選びます。
+4. ブラウザが自動で開かない場合は、<http://127.0.0.1:4174> を開きます。
+
+PowerShellでSHA-256を確認する例：
+
+```powershell
+Get-FileHash .\Capacity-Atlas-Connector-Windows-x64.zip -Algorithm SHA256
+```
+
 ## 特徴
 
 - 起動直後に、接続済みアカウントの残容量とリセット時刻を表示

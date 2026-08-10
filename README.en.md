@@ -20,6 +20,27 @@ No preinstalled Node.js runtime or provider CLI is required.
 
 Launch the Connector, click **Add account**, and complete OAuth in your browser.
 
+### First launch on macOS Apple Silicon
+
+1. Extract the ZIP and move `Capacity Atlas Connector.app` to Applications.
+2. The current release is not yet Apple-notarized. If macOS blocks a normal double-click, **Control-click the app, choose Open, then choose Open again**.
+3. If the browser does not open automatically, visit <http://127.0.0.1:4174>.
+
+This package supports Apple Silicon Macs. Before bypassing the warning, compare the downloaded ZIP's SHA-256 with the value published in the GitHub Release.
+
+### First launch on Windows x64
+
+1. Extract the entire ZIP and keep every file in the same folder.
+2. Double-click `Start Capacity Atlas.cmd`.
+3. The current release is not yet code-signed. If SmartScreen appears, choose **More info → Run anyway** only after verifying the GitHub Release source, filename, and SHA-256.
+4. If the browser does not open automatically, visit <http://127.0.0.1:4174>.
+
+SHA-256 verification in PowerShell:
+
+```powershell
+Get-FileHash .\Capacity-Atlas-Connector-Windows-x64.zip -Algorithm SHA256
+```
+
 ## Highlights
 
 - Dashboard-first interface with no marketing landing screen

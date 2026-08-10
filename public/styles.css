@@ -28,6 +28,10 @@ body {
 }
 button, a { font: inherit; }
 button { color: inherit; }
+button:focus-visible, a:focus-visible, [role="tab"]:focus-visible, summary:focus-visible {
+  outline: 3px solid #8ff0ca;
+  outline-offset: 3px;
+}
 .app-shell { min-height: 100vh; display: grid; grid-template-columns: var(--sidebar) 1fr; }
 
 .sidebar {
@@ -117,7 +121,7 @@ main { grid-column: 2; min-width: 0; }
 .connection.live > span { background: var(--green); box-shadow: 0 0 10px #50d8a177; }
 .connection.demo > span { background: var(--amber); }
 .add-account-button, .refresh-button, .primary-button, .secondary-button {
-  min-height: 40px;
+  min-height: 44px;
   border-radius: 9px;
   font-weight: 700;
   cursor: pointer;
@@ -172,7 +176,7 @@ h2 { margin-bottom: 0; font-size: 23px; letter-spacing: -.035em; }
   display: flex;
   align-items: center;
   gap: 7px;
-  min-height: 34px;
+  min-height: 44px;
   padding: 0 12px;
   border: 0;
   border-radius: 7px;
@@ -303,7 +307,7 @@ tbody tr:last-child td { border-bottom: 0; }
 
 .duplicate-badge { display:inline-flex; width:max-content; margin-top:3px; padding:2px 6px; border-radius:999px; background:color-mix(in srgb,var(--accent) 11%,transparent); color:var(--accent); font-size:9px; font-weight:700; }
 .card-foot-actions { display:flex; align-items:center; gap:10px; }
-.disconnect-button { min-height:28px; padding:4px 8px; border:1px solid #343945; border-radius:7px; background:transparent; color:#9aa1ae; font:inherit; font-size:10px; cursor:pointer; transition:.18s ease; }
+.disconnect-button { min-height:44px; padding:8px 10px; border:1px solid #343945; border-radius:7px; background:transparent; color:#9aa1ae; font:inherit; font-size:10px; cursor:pointer; transition:.18s ease; }
 .disconnect-button:hover { border-color:#e0616b; color:#ff8a92; background:rgba(224,97,107,.08); }
 .disconnect-dialog { width:min(480px,calc(100% - 32px)); border:1px solid #2c323d; border-radius:18px; padding:0; background:#11141a; color:var(--text); box-shadow:0 28px 80px rgba(0,0,0,.6); }
 .disconnect-dialog::backdrop { background:rgba(2,4,8,.78); backdrop-filter:blur(4px); }
@@ -352,18 +356,25 @@ tbody tr:last-child td { border-bottom: 0; }
   .topbar { align-items: center; }
   .mobile-brand { font-size: 13px; }
   .topbar-actions { min-width: 0; margin-left: auto; flex: 0 0 auto; }
-  .add-account-button, .refresh-button { width: 40px; min-height: 40px; padding: 0; justify-content: center; }
-  .add-account-button { font-size: 0; }
-  .add-account-button span { font-size: 22px; }
-  .refresh-button span:last-child { display: none; }
+  .topbar-actions { gap: 7px; }
+  .add-account-button, .refresh-button { width: auto; min-height: 44px; padding: 0 10px; justify-content: center; gap: 4px; font-size: 11px; }
+  .add-account-button span { font-size: 18px; }
   .account-grid { grid-template-columns: 1fr; }
   .quota-number { font-size: 38px; }
   .summary-grid { grid-template-columns: 1fr 1fr; }
   .metric-card { min-height: 92px; padding: 13px; }
   .metric-card strong { font-size: 22px; }
-  .activity-section { overflow: hidden; }
-  .table-wrap { overflow-x: auto; }
-  table { min-width: 650px; }
+  .activity-section { overflow: visible; }
+  .table-wrap { overflow: visible; border: 0; background: transparent; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  thead { display: none; }
+  tbody { display: grid; gap: 10px; }
+  tbody tr { padding: 8px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  tbody td { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line-soft); font-size: 11px; overflow-wrap: anywhere; }
+  tbody td::before { content: attr(data-label); color: var(--muted); font-size: 10px; font-weight: 700; }
+  tbody tr td:last-child { border-bottom: 0; }
+  tbody .table-empty { display: block; padding: 28px 14px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; }
+  tbody .table-empty::before { content: none; }
   .provider-choices { grid-template-columns: 1fr; }
   .connector-install-actions { grid-template-columns: 1fr; }
   .connector-install-actions p { grid-column: auto; }

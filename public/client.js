@@ -1,10 +1,10 @@
-import { accountTone, deriveSummary, primaryQuota } from "./model.js?v=0.7.2";
-import { loginOpenedLabel, setupGuide } from "./setup-model.js?v=0.7.2";
-import { connectorIsCompatible, createConnectorClient } from "./connector-client.js?v=0.7.2";
-import { parseBrowserLogin, parseDeviceLogin, stripTerminalFormatting } from "./login-output-model.js?v=0.7.2";
+import { accountTone, deriveSummary, primaryQuota } from "./model.js?v=0.7.3";
+import { loginOpenedLabel, setupGuide } from "./setup-model.js?v=0.7.3";
+import { connectorIsCompatible, createConnectorClient } from "./connector-client.js?v=0.7.3";
+import { parseBrowserLogin, parseDeviceLogin, stripTerminalFormatting } from "./login-output-model.js?v=0.7.3";
 
 const connector = createConnectorClient();
-const state = { data: { accounts: [], collectedAt: null }, provider: "all", countdown: 60, setupProvider: "codex", connectorReady: false, connectorOutdated: false, loginTimer: null, disconnectAccountId: null };
+const state = { data: { accounts: [], collectedAt: null }, provider: "all", countdown: 60, setupProvider: "codex", connectorReady: false, connectorOutdated: false, loginTimer: null, disconnectAccountId: null, setupReturnFocus: null, disconnectReturnFocus: null };
 const $ = selector => document.querySelector(selector);
 const COLORS = { codex: "#10a37f", claude: "#d97757", grok: "#8b9dff" };
 const PROVIDER_ASSETS = {
@@ -112,7 +112,7 @@ function render() {
     : `<div class="empty"><strong>アカウントは0件です</strong><p>${emptyMessage}</p></div>`;
   $("#statusTable").innerHTML = filtered.length ? filtered.map(account => {
     const color = account.status === "healthy" ? "#50d8a1" : account.status === "connected" ? COLORS[account.provider] : account.status === "auth_required" ? "#f0b45a" : "#ff6b75";
-    return `<tr><td class="provider-cell">${escapeHtml(account.providerName)}</td><td>${escapeHtml(account.email || account.label)}</td><td>${escapeHtml(account.source || "—")}</td><td>${formatTime(account.updatedAt)}</td><td><span class="table-status" style="--status-color:${color}">${statusLabel(account.status)}</span></td></tr>`;
+    return `<tr><td class="provider-cell" data-label="サービス">${escapeHtml(account.providerName)}</td><td data-label="アカウント">${escapeHtml(account.email || account.label)}</td><td data-label="取得元">${escapeHtml(account.source || "—")}</td><td data-label="最終更新">${formatTime(account.updatedAt)}</td><td data-label="状態"><span class="table-status" style="--status-color:${color}">${statusLabel(account.status)}</span></td></tr>`;
   }).join("") : '<tr><td colspan="5" class="table-empty">接続済みのアカウントはありません。</td></tr>';
 }
 
@@ -145,6 +145,8 @@ function renderSetupGuide(provider) {
     const active = button.dataset.setupProvider === provider;
     button.classList.toggle("active", active);
     button.setAttribute("aria-selected", String(active));
+    button.tabIndex = active ? 0 : -1;
+    if (active) $("#setupPanel").setAttribute("aria-labelledby", button.id);
   });
 }
 
@@ -185,15 +187,23 @@ async function checkConnector() {
 }
 
 async function openSetupDialog(provider = "codex") {
+  state.setupReturnFocus = document.activeElement;
   renderSetupGuide(provider);
   $("#accountSetupDialog").showModal();
   await checkConnector();
+  if (!$("#accountSetupDialog").open) return;
+  document.querySelector(`.provider-choice[data-setup-provider="${provider}"]`)?.focus();
 }
 
 function closeSetupDialog() {
+  $("#accountSetupDialog").close();
+}
+
+function handleSetupDialogClosed() {
   if (state.loginTimer) clearInterval(state.loginTimer);
   state.loginTimer = null;
-  $("#accountSetupDialog").close();
+  state.setupReturnFocus?.focus?.();
+  state.setupReturnFocus = null;
 }
 
 function renderLoginProgress(element, value) {
@@ -257,8 +267,10 @@ async function startAccountLogin() {
   renderLoginProgress(output, "");
   try {
     const session = await connector.startLogin(state.setupProvider);
+    if (!$("#accountSetupDialog").open) return;
     const update = async () => {
       const progress = await connector.loginStatus(session.id);
+      if (!$("#accountSetupDialog").open) return true;
       renderLoginProgress(output, progress.output || "");
       if (progress.status === "completed") {
         if (state.loginTimer) clearInterval(state.loginTimer);
@@ -282,6 +294,7 @@ async function startAccountLogin() {
     const finished = await update();
     if (!finished) state.loginTimer = setInterval(() => void update().catch(() => {}), 1200);
   } catch (error) {
+    if (!$("#accountSetupDialog").open) return;
     renderLoginResult(output, false, error.message);
     button.disabled = false;
     button.textContent = setupGuide(state.setupProvider)?.actionLabel || "接続する";
@@ -292,6 +305,7 @@ async function openDisconnectDialog(accountId) {
   const account = state.data.accounts?.find(item => item.id === accountId);
   if (!account?.managedConnectionIds?.length) return;
   state.disconnectAccountId = accountId;
+  state.disconnectReturnFocus = document.activeElement;
   const count = account.managedConnectionIds.length;
   $("#disconnectAccountSummary").innerHTML = `<span class="provider-icon">${providerLogo(account.provider)}</span><div><b>${escapeHtml(account.providerName)}</b><span>${escapeHtml(account.email || account.label)}</span></div>`;
   $("#disconnectDialogCopy").textContent = account.hasAmbientConnection
@@ -299,11 +313,17 @@ async function openDisconnectDialog(accountId) {
     : `Capacity Atlasで追加したこの接続を削除します。後から再接続できます。`;
   $("#confirmDisconnectButton").textContent = account.hasAmbientConnection && count > 1 ? `${count}件の重複を整理` : "接続解除";
   $("#disconnectDialog").showModal();
+  $("#cancelDisconnectButton").focus();
 }
 
 function closeDisconnectDialog() {
-  state.disconnectAccountId = null;
   $("#disconnectDialog").close();
+}
+
+function handleDisconnectDialogClosed() {
+  state.disconnectAccountId = null;
+  state.disconnectReturnFocus?.focus?.();
+  state.disconnectReturnFocus = null;
 }
 
 async function confirmDisconnect() {
@@ -315,7 +335,9 @@ async function confirmDisconnect() {
     const result = await connector.disconnectAccount(state.disconnectAccountId);
     closeDisconnectDialog();
     await loadData(false);
-    showToast(result.removed > 1 ? `${result.removed}件の重複接続を整理しました` : "接続を解除しました");
+    showToast(result.cleanupPending
+      ? "接続は解除しました。認証フォルダの清掃は次回もう一度試します"
+      : result.removed > 1 ? `${result.removed}件の重複接続を整理しました` : "接続を解除しました");
   } catch (error) {
     showToast(error.message || "接続を解除できませんでした");
   } finally {
@@ -359,9 +381,24 @@ $("#providerChoices").addEventListener("click", event => {
   const button = event.target.closest("button[data-setup-provider]");
   if (button) renderSetupGuide(button.dataset.setupProvider);
 });
+$("#providerChoices").addEventListener("keydown", event => {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+  const tabs = [...document.querySelectorAll(".provider-choice")];
+  const currentIndex = Math.max(0, tabs.indexOf(document.activeElement));
+  const nextIndex = event.key === "Home"
+    ? 0
+    : event.key === "End"
+    ? tabs.length - 1
+    : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+  event.preventDefault();
+  const next = tabs[nextIndex];
+  renderSetupGuide(next.dataset.setupProvider);
+  next.focus();
+});
 $("#addAccountButton").addEventListener("click", () => void openSetupDialog());
 $("#closeSetupDialog").addEventListener("click", closeSetupDialog);
 $("#cancelSetupDialog").addEventListener("click", closeSetupDialog);
+$("#accountSetupDialog").addEventListener("close", handleSetupDialogClosed);
 $("#connectAccountButton").addEventListener("click", startAccountLogin);
 $("#loginOutput").addEventListener("click", event => {
   const button = event.target.closest("button[data-auth-url]");
@@ -393,6 +430,7 @@ $("#accountGrid").addEventListener("click", event => {
 $("#closeDisconnectDialog").addEventListener("click", closeDisconnectDialog);
 $("#cancelDisconnectButton").addEventListener("click", closeDisconnectDialog);
 $("#confirmDisconnectButton").addEventListener("click", confirmDisconnect);
+$("#disconnectDialog").addEventListener("close", handleDisconnectDialogClosed);
 $("#disconnectDialog").addEventListener("click", event => { if (event.target === event.currentTarget) closeDisconnectDialog(); });
 $("#accountSetupDialog").addEventListener("click", event => { if (event.target === event.currentTarget) closeSetupDialog(); });
 $("#refreshButton").addEventListener("click", () => loadData(true));

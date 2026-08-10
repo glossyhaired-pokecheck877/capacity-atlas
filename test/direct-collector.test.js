@@ -37,6 +37,71 @@ test("Codex OAuth credentials are collected without CodexBar", async () => {
   assert.equal(account.source, "Capacity Atlas Connector");
 });
 
+test("a stalled provider request times out instead of blocking Connector status", async () => {
+  const account = await collectCodexAccount({
+    home: "/profile",
+    timeoutMs: 10,
+    readJson: async () => ({ tokens: { access_token: "secret" } }),
+    fetch: async (_url, options) => new Promise((_resolve, reject) => {
+      options.signal.addEventListener("abort", () => reject(options.signal.reason), { once: true });
+    })
+  });
+  assert.equal(account.status, "unavailable");
+  assert.match(account.message, /abort|timeout|timed out/i);
+});
+
+test("an oversized provider response is rejected before reading its body", async () => {
+  const account = await collectCodexAccount({
+    home: "/profile",
+    readJson: async () => ({ tokens: { access_token: "secret" } }),
+    fetch: async () => new Response("{}", {
+      status: 200,
+      headers: { "content-length": "2000000", "content-type": "application/json" }
+    })
+  });
+  assert.equal(account.status, "unavailable");
+  assert.match(account.message, /大きすぎ/);
+});
+
+test("a provider response without a readable stream fails closed", async () => {
+  const account = await collectCodexAccount({
+    home: "/profile",
+    readJson: async () => ({ tokens: { access_token: "secret" } }),
+    fetch: async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      arrayBuffer: async () => { throw new Error("must not buffer"); },
+      text: async () => { throw new Error("must not buffer"); }
+    })
+  });
+  assert.equal(account.status, "unavailable");
+  assert.match(account.message, /安全なストリーム/);
+});
+
+test("a failed provider response stream is cancelled and released", async () => {
+  let cancelled = false;
+  let released = false;
+  const account = await collectCodexAccount({
+    home: "/profile",
+    readJson: async () => ({ tokens: { access_token: "secret" } }),
+    fetch: async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      body: { getReader: () => ({
+        read: async () => { throw new Error("stream failed"); },
+        cancel: async () => { cancelled = true; },
+        releaseLock: () => { released = true; }
+      }) }
+    })
+  });
+  assert.equal(account.status, "unavailable");
+  assert.match(account.message, /stream failed/);
+  assert.equal(cancelled, true);
+  assert.equal(released, true);
+});
+
 test("Claude uses the official Keychain credential when the legacy file token is expired", async () => {
   let authorization;
   const account = await collectClaudeAccount({

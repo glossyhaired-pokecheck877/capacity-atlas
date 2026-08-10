@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loginSpec, resolveProviderCommand, sanitizeLoginOutput, AccountManager } from "../lib/account-manager.js";
@@ -82,14 +83,18 @@ test("Claude OAuth completion is verified with the official auth status instead 
     },
     mkdir: async () => {},
     access: async () => { throw new Error("credentials are stored in Keychain"); },
-    readFile: async () => '{"version":1,"accounts":[]}',
+    readFile: async path => path.endsWith("provider-metadata.json")
+      ? '{"version":1,"providers":{}}'
+      : '{"version":1,"accounts":[]}',
     writeFile: async (path, value) => { writes.push({ path, value: JSON.parse(value) }); }
   });
 
   const session = await manager.start("claude");
   await new Promise(resolve => setImmediate(resolve));
   child.emit("close", 0);
-  await new Promise(resolve => setImmediate(resolve));
+  for (let attempt = 0; attempt < 20 && manager.get(session.id).status !== "completed"; attempt += 1) {
+    await new Promise(resolve => setTimeout(resolve, 5));
+  }
   assert.equal(manager.get(session.id).status, "completed");
   const metadataWrite = writes.find(write => write.path.endsWith("provider-metadata.json"));
   assert.equal(metadataWrite.value.providers.claude.email, "sales@example.com");
@@ -99,10 +104,12 @@ test("Claude OAuth completion is verified with the official auth status instead 
 test("AccountManager labels managed profile homes without treating ambient CLI auth as removable", async () => {
   const manager = new AccountManager({
     root: "/tmp/capacity-atlas-home-metadata-test",
-    readFile: async () => JSON.stringify({
-      version: 1,
-      accounts: [{ id: "managed-one", provider: "codex", home: "/profiles/managed-one" }]
-    })
+    readFile: async path => path.endsWith("provider-metadata.json")
+      ? JSON.stringify({ version: 1, providers: {} })
+      : JSON.stringify({
+        version: 1,
+        accounts: [{ id: "managed-one", provider: "codex", home: "/profiles/managed-one" }]
+      })
   });
 
   const homes = await manager.homes();
@@ -117,6 +124,7 @@ test("AccountManager labels managed profile homes without treating ambient CLI a
 
 test("AccountManager disconnect removes only selected managed profiles and rewrites the registry", async () => {
   const removed = [];
+  const renamed = [];
   let written;
   const root = join(tmpdir(), "capacity-atlas-disconnect-test");
   const removeHome = join(root, "profiles", "codex", "remove-me");
@@ -132,13 +140,127 @@ test("AccountManager disconnect removes only selected managed profiles and rewri
     }),
     writeFile: async (_path, value) => { written = JSON.parse(value); },
     mkdir: async () => {},
+    rename: async (from, to) => { renamed.push([from, to]); },
     rm: async path => { removed.push(path); }
   });
 
   const result = await manager.disconnect(["remove-me"]);
   assert.deepEqual(result, { removed: 1 });
-  assert.deepEqual(removed, [removeHome]);
+  assert.equal(renamed[0][0], removeHome);
+  assert.match(renamed[0][1], /\.capacity-atlas-disconnect-/);
+  assert.deepEqual(removed, [renamed[0][1]]);
   assert.deepEqual(written.accounts.map(account => account.id), ["keep-me"]);
+});
+
+test("disconnect never deletes credentials when the registry update fails", async () => {
+  const removed = [];
+  const renamed = [];
+  const root = await mkdtemp(join(tmpdir(), "capacity-atlas-disconnect-failure-"));
+  const removeHome = join(root, "profiles", "codex", "remove-me");
+  const manager = new AccountManager({
+    root,
+    readFile: async () => JSON.stringify({
+      version: 1,
+      accounts: [{ id: "remove-me", provider: "codex", home: removeHome }]
+    }),
+    writeFile: async () => { throw new Error("disk full"); },
+    rename: async (from, to) => { renamed.push([from, to]); },
+    rm: async path => { removed.push(path); }
+  });
+
+  await assert.rejects(() => manager.disconnect(["remove-me"]), /disk full/);
+  assert.deepEqual(removed, []);
+  assert.equal(renamed.length, 2, "staged credentials are renamed back after registry failure");
+  assert.equal(renamed[0][0], removeHome);
+  assert.equal(renamed[1][1], removeHome);
+});
+
+test("disconnect records credential cleanup failures for a safe retry", async () => {
+  const writes = [];
+  const root = await mkdtemp(join(tmpdir(), "capacity-atlas-disconnect-cleanup-"));
+  const removeHome = join(root, "profiles", "codex", "remove-me");
+  const manager = new AccountManager({
+    root,
+    readFile: async () => JSON.stringify({
+      version: 1,
+      accounts: [{ id: "remove-me", provider: "codex", home: removeHome }]
+    }),
+    writeFile: async (_path, value) => { writes.push(JSON.parse(value)); },
+    rename: async () => {},
+    rm: async () => { throw new Error("file busy"); }
+  });
+
+  const result = await manager.disconnect(["remove-me"]);
+  assert.deepEqual(result, { removed: 1, cleanupPending: 1 });
+  assert.equal(writes.at(-1).accounts.length, 0);
+  assert.equal(writes.at(-1).pendingCleanup.length, 1);
+  assert.match(writes.at(-1).pendingCleanup[0].path, /\.capacity-atlas-disconnect-/);
+});
+
+test("pending credential cleanup is retried and untrusted paths fail closed", async () => {
+  const root = await mkdtemp(join(tmpdir(), "capacity-atlas-disconnect-retry-"));
+  const pendingPath = join(root, "profiles", "codex", "old.capacity-atlas-disconnect-1234");
+  const removed = [];
+  const writes = [];
+  const retryManager = new AccountManager({
+    root,
+    readFile: async () => JSON.stringify({ version: 1, accounts: [], pendingCleanup: [{ path: pendingPath }] }),
+    writeFile: async (_path, value) => { writes.push(JSON.parse(value)); },
+    rm: async path => { removed.push(path); }
+  });
+  assert.deepEqual(await retryManager.disconnect(["already-removed"]), { removed: 0 });
+  assert.deepEqual(removed, [pendingPath]);
+  assert.deepEqual(writes.at(-1).pendingCleanup, []);
+
+  let unsafeRemoveCalled = false;
+  const unsafeManager = new AccountManager({
+    root,
+    readFile: async () => JSON.stringify({
+      version: 1,
+      accounts: [],
+      pendingCleanup: [{ path: "/tmp/outside.capacity-atlas-disconnect-1234" }]
+    }),
+    writeFile: async () => {},
+    rm: async () => { unsafeRemoveCalled = true; }
+  });
+  await assert.rejects(() => unsafeManager.disconnect(["already-removed"]), /管理対象外/);
+  assert.equal(unsafeRemoveCalled, false);
+});
+
+test("concurrent account registrations preserve every connection", async () => {
+  const root = await mkdtemp(join(tmpdir(), "capacity-atlas-concurrent-registry-"));
+  const manager = new AccountManager({ root });
+  await Promise.all([
+    manager.register({ id: "one", provider: "codex", home: join(root, "profiles", "codex", "one") }),
+    manager.register({ id: "two", provider: "grok", home: join(root, "profiles", "grok", "two") })
+  ]);
+  const registry = JSON.parse(await readFile(join(root, "accounts.json"), "utf8"));
+  assert.deepEqual(registry.accounts.map(account => account.id).sort(), ["one", "two"]);
+});
+
+test("a lock left by a terminated Connector is recovered before registration", async () => {
+  const root = await mkdtemp(join(tmpdir(), "capacity-atlas-stale-lock-"));
+  const lock = join(root, ".accounts.lock");
+  await mkdir(lock);
+  await writeFile(join(lock, "owner.json"), JSON.stringify({ pid: 999999, createdAt: new Date().toISOString() }));
+
+  const manager = new AccountManager({ root });
+  await manager.register({ id: "recovered", provider: "codex", home: join(root, "profiles", "recovered") });
+
+  const registry = JSON.parse(await readFile(join(root, "accounts.json"), "utf8"));
+  assert.deepEqual(registry.accounts.map(account => account.id), ["recovered"]);
+});
+
+test("a malformed registry fails closed and is never overwritten", async () => {
+  const root = await mkdtemp(join(tmpdir(), "capacity-atlas-corrupt-registry-"));
+  const registryPath = join(root, "accounts.json");
+  await writeFile(registryPath, "{not-json", { mode: 0o600 });
+  const manager = new AccountManager({ root });
+  await assert.rejects(
+    () => manager.register({ id: "new", provider: "codex", home: join(root, "profiles", "codex", "new") }),
+    /接続情報を安全に読み込めません/
+  );
+  assert.equal(await readFile(registryPath, "utf8"), "{not-json");
 });
 
 test("bundled Codex is preferred so account login works without a system CLI", () => {
@@ -176,6 +298,31 @@ test("login output redacts credential-shaped values", () => {
   const output = sanitizeLoginOutput("\u001b[94mAuthorization: Bearer abcdefghijklmnop\u001b[0m refresh_token=super-secret-token\nOpen https://example.com");
   assert.doesNotMatch(output, /abcdefghijklmnop|super-secret-token|\[94m|\u001b/);
   assert.match(output, /Open https:\/\/example.com/);
+});
+
+test("OAuth completion reports a failed session when registry persistence fails", async () => {
+  const child = new EventEmitter();
+  child.stdout = new EventEmitter();
+  child.stderr = new EventEmitter();
+  child.kill = () => {};
+  const manager = new AccountManager({
+    root: join(tmpdir(), `capacity-atlas-write-failure-${Date.now()}`),
+    spawn: () => child,
+    providerHelper: { ensure: async () => "/tmp/codex" },
+    mkdir: async () => {},
+    access: async () => {},
+    readFile: async () => '{"version":1,"accounts":[]}',
+    writeFile: async () => { throw new Error("disk full"); }
+  });
+
+  const session = await manager.start("codex");
+  child.emit("close", 0);
+  for (let attempt = 0; attempt < 30 && manager.get(session.id).status !== "failed"; attempt += 1) {
+    await new Promise(resolve => setTimeout(resolve, 5));
+  }
+
+  assert.equal(manager.get(session.id).status, "failed");
+  assert.match(manager.get(session.id).output, /disk full/);
 });
 
 test("AccountManager exposes login progress without exposing the child process", async () => {

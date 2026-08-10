@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#090b0f">
   <meta name="description" content="複数AIアカウントの残容量・リセット日時・認証状態を一画面で確認するローカルファースト管理ツール">
   <title>Capacity Atlas — AI利用枠管理</title>
-  <link rel="stylesheet" href="/styles.css?v=0.7.2">
-  <link rel="stylesheet" href="/connector.css?v=0.7.2">
+  <link rel="stylesheet" href="/styles.css?v=0.7.3">
+  <link rel="stylesheet" href="/connector.css?v=0.7.3">
 </head>
 <body>
   <div class="app-shell">
@@ -88,11 +88,11 @@
       <p>ダウンロード後に解凍してConnectorを起動し、「接続を再確認」を押してください。</p>
     </div>
     <div class="provider-choices" id="providerChoices" role="tablist" aria-label="追加するサービス">
-      <button class="provider-choice active" data-setup-provider="codex" type="button" role="tab"><img src="/assets/providers/openai.svg" alt="">GPT / Codex</button>
-      <button class="provider-choice" data-setup-provider="claude" type="button" role="tab"><img src="/assets/providers/claude.svg" alt="">Claude</button>
-      <button class="provider-choice" data-setup-provider="grok" type="button" role="tab"><img src="/assets/providers/grok.svg" alt="">Grok</button>
+      <button class="provider-choice active" id="setupTabCodex" data-setup-provider="codex" type="button" role="tab" aria-controls="setupPanel" aria-selected="true" tabindex="0"><img src="/assets/providers/openai.svg" alt="">GPT / Codex</button>
+      <button class="provider-choice" id="setupTabClaude" data-setup-provider="claude" type="button" role="tab" aria-controls="setupPanel" aria-selected="false" tabindex="-1"><img src="/assets/providers/claude.svg" alt="">Claude</button>
+      <button class="provider-choice" id="setupTabGrok" data-setup-provider="grok" type="button" role="tab" aria-controls="setupPanel" aria-selected="false" tabindex="-1"><img src="/assets/providers/grok.svg" alt="">Grok</button>
     </div>
-    <section class="setup-panel" aria-live="polite"><div class="setup-title-row"><h3 id="setupProviderTitle">GPT / Codex</h3><span id="setupCapability">複数アカウント対応</span></div><ol id="setupSteps"></ol><pre class="login-output" id="loginOutput" hidden></pre><p class="setup-note" id="setupNote"></p></section>
+    <section class="setup-panel" id="setupPanel" role="tabpanel" aria-labelledby="setupTabCodex" aria-live="polite"><div class="setup-title-row"><h3 id="setupProviderTitle">GPT / Codex</h3><span id="setupCapability">複数アカウント対応</span></div><ol id="setupSteps"></ol><pre class="login-output" id="loginOutput" hidden></pre><p class="setup-note" id="setupNote"></p></section>
     <div class="dialog-actions"><button class="secondary-button" id="cancelSetupDialog" type="button">閉じる</button><button class="primary-button" id="connectAccountButton" type="button">OpenAIへ接続</button></div>
   </dialog>
 
@@ -105,6 +105,6 @@
   </dialog>
 
   <div class="toast" id="toast" role="status"></div>
-  <script type="module" src="/client.js?v=0.7.2"></script>
+  <script type="module" src="/client.js?v=0.7.3"></script>
 </body>
 </html>

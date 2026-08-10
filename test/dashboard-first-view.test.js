@@ -29,7 +29,38 @@ test("mobile layout keeps primary actions and content inside the viewport", asyn
   const css = await source("styles.css");
   assert.match(css, /main \{ min-width: 0; width: 100%; max-width: 100vw; overflow-x: hidden; \}/);
   assert.match(css, /\.topbar-actions \{ min-width: 0; margin-left: auto; flex: 0 0 auto; \}/);
-  assert.match(css, /\.add-account-button, \.refresh-button \{ width: 40px;/);
+  assert.match(css, /\.add-account-button, \.refresh-button \{ width: auto; min-height: 44px;/);
+});
+
+test("mobile controls remain labeled, touchable, and connection rows do not require horizontal scrolling", async () => {
+  const [css, client] = await Promise.all([source("styles.css"), source("client.js")]);
+  assert.match(css, /\.filter\s*\{[\s\S]*?min-height:\s*44px/);
+  assert.match(css, /\.disconnect-button\s*\{[^}]*min-height:\s*44px/);
+  assert.match(css, /@media \(max-width: 580px\)[\s\S]*?thead\s*\{\s*display:\s*none/);
+  assert.doesNotMatch(css, /@media \(max-width: 580px\)[\s\S]*?table\s*\{\s*min-width:\s*650px/);
+  assert.doesNotMatch(css, /\.add-account-button\s*\{\s*font-size:\s*0/);
+  assert.match(client, /data-label="サービス"/);
+  assert.match(client, /data-label="状態"/);
+});
+
+test("keyboard users receive visible focus and an associated arrow-key tab interface", async () => {
+  const [html, css, client] = await Promise.all([
+    source("index.html"),
+    source("styles.css"),
+    source("client.js")
+  ]);
+  assert.match(css, /:focus-visible/);
+  assert.match(html, /id="setupTabCodex"[^>]*aria-controls="setupPanel"/);
+  assert.match(html, /id="setupPanel"[^>]*role="tabpanel"[^>]*aria-labelledby="setupTabCodex"/);
+  assert.match(client, /accountSetupDialog"\)\.addEventListener\("close"/);
+  assert.match(client, /disconnectDialog"\)\.addEventListener\("close"/);
+  assert.match(client, /setupReturnFocus\?\.focus/);
+  assert.match(client, /disconnectReturnFocus\?\.focus/);
+  assert.match(client, /if \(!\$\("#accountSetupDialog"\)\.open\) return true/);
+  assert.ok((client.match(/if \(!\$\("#accountSetupDialog"\)\.open\) return;/g) || []).length >= 2);
+  assert.match(client, /ArrowLeft/);
+  assert.match(client, /ArrowRight/);
+  assert.match(client, /setupReturnFocus/);
 });
 
 test("managed account cards expose a confirmation-based disconnect action", async () => {
