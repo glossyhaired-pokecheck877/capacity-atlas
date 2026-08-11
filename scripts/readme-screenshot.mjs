@@ -1,8 +1,9 @@
 import { spawn } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const root = new URL("../", import.meta.url).pathname;
+const productVersion = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8")).version;
 const chromePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const port = 4180;
 const debugPort = 9224;
@@ -109,7 +110,7 @@ try {
       const { requestId, request } = message.params;
       const isHealth = request.url.endsWith("/api/health");
       const body = isHealth
-        ? { name: "Capacity Atlas Connector", version: "0.7.2", ready: true, codexBar: false }
+        ? { name: "Capacity Atlas Connector", version: productVersion, ready: true, codexBar: false }
         : status;
       send("Fetch.fulfillRequest", {
         requestId,
