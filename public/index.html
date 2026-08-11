@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#090b0f">
   <meta name="description" content="複数AIアカウントの残容量・リセット日時・認証状態を一画面で確認するローカルファースト管理ツール">
   <title>Capacity Atlas — AI利用枠管理</title>
-  <link rel="stylesheet" href="/styles.css?v=0.7.4">
-  <link rel="stylesheet" href="/connector.css?v=0.7.4">
+  <link rel="stylesheet" href="/styles.css?v=0.7.5">
+  <link rel="stylesheet" href="/connector.css?v=0.7.5">
 </head>
 <body>
   <div class="app-shell">
@@ -31,12 +31,12 @@
 
     <main>
       <header class="topbar">
-        <a class="mobile-brand" href="#accounts"><span class="brand-mark"><i></i><i></i><i></i></span>Capacity Atlas</a>
+        <a class="mobile-brand" href="#accounts"><span class="brand-mark"><i></i><i></i><i></i></span><span class="mobile-brand-name">Capacity Atlas</span></a>
         <div class="page-title"><b>アカウント容量</b><span id="lastSyncTop">同期を確認中</span></div>
         <div class="topbar-actions">
           <div class="connection" id="connectionState"><span></span><b>接続を確認中</b></div>
-          <button class="add-account-button" id="addAccountButton" type="button"><span>＋</span>アカウントを追加</button>
-          <button class="refresh-button" id="refreshButton" type="button"><span class="refresh-icon">↻</span><span>更新</span></button>
+          <button class="add-account-button" id="addAccountButton" type="button" aria-label="アカウントを追加"><span aria-hidden="true">＋</span><span class="add-account-label">アカウントを追加</span></button>
+          <button class="refresh-button" id="refreshButton" type="button" aria-label="更新"><span class="refresh-icon" aria-hidden="true">↻</span><span class="refresh-label">更新</span></button>
         </div>
       </header>
 
@@ -105,6 +105,6 @@
   </dialog>
 
   <div class="toast" id="toast" role="status"></div>
-  <script type="module" src="/client.js?v=0.7.4"></script>
+  <script type="module" src="/client.js?v=0.7.5"></script>
 </body>
 </html>

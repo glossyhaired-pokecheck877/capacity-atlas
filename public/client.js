@@ -1,7 +1,7 @@
-import { accountTone, deriveSummary, primaryQuota } from "./model.js?v=0.7.4";
-import { loginOpenedLabel, setupGuide } from "./setup-model.js?v=0.7.4";
-import { connectorIsCompatible, createConnectorClient } from "./connector-client.js?v=0.7.4";
-import { parseBrowserLogin, parseDeviceLogin, stripTerminalFormatting } from "./login-output-model.js?v=0.7.4";
+import { accountTone, deriveSummary, primaryQuota } from "./model.js?v=0.7.5";
+import { loginOpenedLabel, setupGuide } from "./setup-model.js?v=0.7.5";
+import { connectorIsCompatible, createConnectorClient } from "./connector-client.js?v=0.7.5";
+import { parseBrowserLogin, parseDeviceLogin, stripTerminalFormatting } from "./login-output-model.js?v=0.7.5";
 
 const connector = createConnectorClient();
 const state = { data: { accounts: [], collectedAt: null }, provider: "all", countdown: 60, setupProvider: "codex", connectorReady: false, connectorOutdated: false, loginTimer: null, activeLoginId: null, disconnectAccountId: null, setupReturnFocus: null, disconnectReturnFocus: null };
