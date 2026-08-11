@@ -26,10 +26,14 @@ test("first-time users can download the Connector instead of being sent to a dea
 });
 
 test("mobile layout keeps primary actions and content inside the viewport", async () => {
-  const css = await source("styles.css");
+  const [html, css] = await Promise.all([source("index.html"), source("styles.css")]);
   assert.match(css, /main \{ min-width: 0; width: 100%; max-width: 100vw; overflow-x: hidden; \}/);
   assert.match(css, /\.topbar-actions \{ min-width: 0; margin-left: auto; flex: 0 0 auto; \}/);
-  assert.match(css, /\.add-account-button, \.refresh-button \{ width: auto; min-height: 44px;/);
+  assert.match(css, /\.refresh-button \{ flex: 0 0 44px; width: 44px; min-height: 44px;/);
+  assert.match(css, /\.summary-grid \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
+  assert.match(css, /\.empty p \{ width: 100%;[^}]*overflow-wrap: anywhere;/);
+  assert.match(html, /class="refresh-label"/);
+  assert.match(html, /aria-label="アカウントを追加"/);
 });
 
 test("mobile controls remain labeled, touchable, and connection rows do not require horizontal scrolling", async () => {
